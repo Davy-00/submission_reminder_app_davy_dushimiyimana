@@ -1,33 +1,62 @@
 Submission Reminder Application
-This application is designed to help students keep track of assignment deadlines by sending automated reminders. It's built using shell scripts and demonstrates file organization, script automation, and basic application structure.
+
+This is a simple shell application that helps students keep track of assignment deadlines. It checks upcoming deadlines and prepares reminders for students with pending assignments.
+
+
 Directory Structure
 Copysubmission_reminder_app/
-├── config/
-│   └── config.env          # Configuration settings
-├── src/
-│   ├── reminder.sh         # Main application script
-│   └── functions.sh        # Helper functions
-├── data/
-│   └── submissions.txt     # Student submission data
-├── logs/
-│   └── reminder.log        # Application logs
-└── startup.sh              # Application startup script
-Setup Instructions
+├── config/             
+│   └── config.env      
+├── src/                
+│   ├── reminder.sh     
+│   └── functions.sh   
+├── data/               
+│   └── submissions.txt 
+├── logs/               
+│   └── reminder.log    
+└── startup.sh          
 
-Clone this repository:
+How to Set Up the Application
+
+Step 1: Download the Files
+First, clone this repository or download the create_environment.sh script:
 bashCopygit clone https://github.com/Davy-00/submission_reminder_app_davydushimiyimana.git
 cd submission_reminder_app_davydushimiyimana
 
-Make the setup script executable:
+Step 2: Make the Setup Script Executable
 bashCopychmod +x create_environment.sh
 
-Run the setup script:
+Step 3: Run the Setup Script
+When you run the script, it will ask for your name and create all the necessary files and directories:
 bashCopy./create_environment.sh
-You'll be prompted to enter your name, which will be used to create the main application directory.
-Navigate to the created directory:
-bashCopycd submission_reminder_davydushimiyimana
 
+Step 4: Navigate to Your App Directory
+The script will create a directory with your name. Navigate into it:
+bashCopycd submission_reminder_yourname
 
-Running the Application
-To start the application, run:
+How to Run the Application
+Simply run the startup script from your app directory:
 bashCopy./startup.sh
+
+What Does Each File Do?
+startup.sh
+This is the main entry point. It checks if all needed files exist and then runs the application.
+
+config.env
+Contains settings for the application like file paths and email configuration.
+
+reminder.sh
+The main application script that controls the reminder workflow.
+
+functions.sh
+Contains helper functions used by the main script, such as:
+
+init_log(): Sets up the log file
+log_message(): Writes messages to the log
+process_submissions(): Processes the submissions data
+send_reminders(): Checks deadlines and prepares reminders
+
+submissions.txt
+Contains student records with the following format:
+CopyStudentID|Name|Email|Subject|Deadline|Status
+
