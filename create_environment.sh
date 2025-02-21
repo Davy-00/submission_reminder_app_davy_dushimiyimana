@@ -1,198 +1,115 @@
 #!/bin/bash
+#script will prompt user 
+read -p "Welcome,what is your name?" Nam
+#creating directory for the user
 
-# Ask for user's name
-echo "Please enter your name:"
-read username
+mkdir submission_reminder_$Nam
+#creating sub directories and files
 
-# Create main directory with the provided name
-main_dir="submission_reminder_$username"
-echo "Creating directory structure for $main_dir..."
-mkdir -p "$main_dir"
+install -D /dev/null /submission_reminder_app_davydushimiyimana/submission_reminder_$Nam/app/reminder.sh
+install -D /dev/null /submission_reminder_app_davydushimiyimana/submission_reminder_$Nam/modules/functions.sh
+install -D /dev/null /submission_reminder_app_davydushimiyimana/submission_reminder_$Nam/assets/submissions.txt
+install -D /dev/null /submission_reminder_app_davydushimiyimana/submission_reminder_$Nam/config/config.env
+install -D /dev/null /submission_reminder_app_davydushimiyimana/submission_reminder_$Nam/startup.sh
 
-# Create subdirectories
-mkdir -p "$main_dir/config"
-mkdir -p "$main_dir/src"
-mkdir -p "$main_dir/data"
-mkdir -p "$main_dir/logs"
-
-# Create and populate config.env
-cat > "$main_dir/config/config.env" << 'EOF'
-# Configuration settings for submission_reminder_app
-
-# Log file path
-LOG_FILE="../logs/reminder.log"
-
-# Data file path
-DATA_FILE="../data/submissions.txt"
-
-
-# Reminder settings
-DAYS_BEFORE_WARNING=3
-EMAIL_SUBJECT="Assignment Submission Reminder"
-
-# Application settings
-APP_NAME="Submission Reminder System"
-APP_VERSION="1.0.0"
-ADMIN_EMAIL="admin@university.edu"
-EOF
-
-# Create and populate reminder.sh
-cat > "$main_dir/src/reminder.sh" << 'EOF'
+#PASTING REQUIRED CONTENT
+cat <<EOF > "/submission_reminder_app_davydushimiyimana/submission_reminder_$Nam/app/reminder.sh"
 #!/bin/bash
 
-# Import configuration and functions
-source ../config/config.env
-source ./functions.sh
+# Source environment variables and helper functions
+source /submission_reminder_app_davydushimiyimana/submission_reminder_$Nam/config/config.env
+source /submission_reminder_app_davydushimiyimana/submission_reminder_$Nam/modules/functions.sh
 
-# Initialize log file
-init_log
+# Path to the submissions file
+submissions_file="/submission_reminder_app_davydushimiyimana/submission_reminder_$Nam/assets/submissions.txt"
 
-# Log application start
-log_message "INFO" "Application started: $APP_NAME v$APP_VERSION"
+# Print remaining time and run the reminder function
+echo "Assignment: \$ASSIGNMENT"
+echo "Days remaining to submit: \$DAYS_REMAINING days"
+echo "--------------------------------------------"
 
-# Process submission data
-process_submissions
+check_submissions \$submissions_file
 
-# Send reminder emails
-send_reminders
-
-# Log application end
-log_message "INFO" "Application completed execution"
-
-exit 0
 EOF
-
-# Make reminder.sh executable
-chmod +x "$main_dir/src/reminder.sh"
-
-# Create and populate functions.sh
-cat > "$main_dir/src/functions.sh" << 'EOF'
+#
+cat <<EOF > "/submission_reminder_app_davydushimiyimana/submission_reminder_$Nam/modules/functions.sh"
 #!/bin/bash
 
-# Initialize log file
-init_log() {
-    mkdir -p "$(dirname "$LOG_FILE")"
-    touch "$LOG_FILE"
-    log_message "INFO" "Log initialized"
-}
+# Function to read submissions file and output students who have not submitted
+function check_submissions {
+    local submissions_file=\$1
+    echo "Checking submissions in \$submissions_file"
 
-# Log message function
-log_message() {
-    local level="$1"
-    local message="$2"
-    local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
-    echo "[$timestamp] [$level] $message" >> "$LOG_FILE"
-}
+    # Skip the header and iterate through the lines
+    while IFS=, read -r student assignment status; do
+        # Remove leading and trailing whitespace
+        student=\$(echo "\$student" | xargs)
+        assignment=\$(echo "\$assignment" | xargs)
+        status=\$(echo "\$status" | xargs)
 
-# Process submissions data
-process_submissions() {
-    if [ ! -f "$DATA_FILE" ]; then
-        log_message "ERROR" "Submissions data file not found: $DATA_FILE"
-        exit 1
-    fi
-    
-    log_message "INFO" "Processing submission data from $DATA_FILE"
-    
-    # Count entries
-    local entry_count=$(wc -l < "$DATA_FILE")
-    log_message "INFO" "Found $entry_count submission records"
-}
-
-# Send reminder emails
-send_reminders() {
-    log_message "INFO" "Checking for upcoming deadlines"
-    
-    while IFS='|' read -r student_id name email subject deadline status; do
-        # Skip header line
-        if [ "$student_id" = "StudentID" ]; then
-            continue
+        # Check if assignment matches and status is 'not submitted'
+        if [[ "\$assignment" == "\$ASSIGNMENT" && "\$status" == "not submitted" ]]; then
+            echo "Reminder: \$student has not submitted the \$ASSIGNMENT assignment!"
         fi
-        
-        # Process only open submissions
-        if [ "$status" = "Pending" ]; then
-            # Calculate days until deadline
-            current_date=$(date +%s)
-            deadline_date=$(date -d "$deadline" +%s)
-            days_diff=$(( (deadline_date - current_date) / 86400 ))
-            
-            if [ "$days_diff" -le "$DAYS_BEFORE_WARNING" ] && [ "$days_diff" -ge 0 ]; then
-                log_message "INFO" "Sending reminder to $name ($email) for $subject due in $days_diff days"
-                
-                # In a real implementation, this would send an actual email
-                # For this assignment, we'll just log it
-                log_message "INFO" "Email sent to $email with subject: $EMAIL_SUBJECT"
-            fi
-        fi
-    done < "$DATA_FILE"
-    
-    log_message "INFO" "Reminder process completed"
+    done < <(tail -n +2 "\$submissions_file") # Skip the header
 }
-EOF
 
-# Create and populate submissions.txt with sample data
-cat > "$main_dir/data/submissions.txt" << 'EOF'
-StudentID|Name|Email|Subject|Deadline|Status
-ST001|frank|m.frank@alueducation.com|git|2023-06-15|Pending
-ST002|kenzo|s.kenzo.com|Resume|2023-06-10|Submitted
-ST003|Kerry|b.kerry@alueducation.com|communication|2023-06-20|Pending
-ST004|Davy|dav.y@alueducation.com|linux|2023-06-12|Pending
 EOF
+#
+cat <<EOF > "/submission_reminder_app_davydushimiyimana/submission_reminder_$Nam/assets/submissions.txt"
+student, assignment, submission status
+Kerry, Shell Navigation, not submitted
+Kenzo, Git, submitted
+Frank, Shell Navigation, not submitted
+Davy, Shell Basics, submitted
+EOF
+#
+cat <<EOF > "/submission_reminder_app_davydushimiyimana/submission_reminder_$Nam/config/config.env"
+# This is the config file
+ASSIGNMENT="Shell Navigation"
+DAYS_REMAINING=2
 
-# Create and populate startup.sh
-cat > "$main_dir/startup.sh" << 'EOF'
+EOF
+#
+cat <<EOF > "/submission_reminder_app_davydushimiyimana/submission_reminder_$Nam/startup.sh"
 #!/bin/bash
 
-# Startup script for Submission Reminder Application
+# startup.sh - Start the submission reminder application
 
-echo "Starting Submission Reminder Application..."
-
-# Change to the src directory
-cd "$(dirname "$0")/src"
-
-# Check if the reminder script exists and is executable
-if [ ! -x "./reminder.sh" ]; then
-    echo "Error: reminder.sh script not found or not executable."
-    echo "Making it executable..."
-    chmod +x ./reminder.sh 2>/dev/null || echo "Failed to make reminder.sh executable."
+# Check if the necessary files exist
+if [ ! -f "/submission_reminder_app_davydushimiyimana/submission_reminder_$Nam/config/config.env" ]; then
+    echo "Error: config.env not found!"
     exit 1
 fi
 
-# Check if the configuration file exists
-if [ ! -f "../config/config.env" ]; then
-    echo "Error: Configuration file not found."
+if [ ! -f "/submission_reminder_app_davydushimiyimana/submission_reminder_$Nam/modules/functions.sh" ]; then
+    echo "Error: functions.sh not found!"
     exit 1
 fi
 
-# Check if the data file exists
-if [ ! -f "../data/submissions.txt" ]; then
-    echo "Error: Submissions data file not found."
+if [ ! -f "/submission_reminder_app_davydushimiyimana/submission_reminder_$Nam/assets/submissions.txt" ]; then
+    echo "Error: submissions.txt not found!"
     exit 1
 fi
 
-# Run the reminder script
-echo "Running reminder script..."
-./reminder.sh
+# Source the configuration file and functions file
+source /submission_reminder_app_davydushimiyimana/submission_reminder_$Nam/config/config.env
+source /submission_reminder_app_davydushimiyimana/submission_reminder_$Nam/modules/functions.sh
 
-# Check the exit status
-if [ $? -eq 0 ]; then
-    echo "Submission Reminder Application ran successfully."
-    echo "Check the logs directory for execution details."
-else
-    echo "Error: Submission Reminder Application encountered issues."
-    echo "Please check the logs for more information."
+# Check if all necessary variables are set
+if [ -z "\$ASSIGNMENT" ] || [ -z "\$DAYS_REMAINING" ]; then
+    echo "Error: Required environment variables (ASSIGNMENT, DAYS_REMAINING) are not set in config.env"
+    exit 1
 fi
 
-exit 0
+# Print initial information
+echo "===================================="
+echo "Starting the Submission Reminder App"
+echo "Assignment: \$ASSIGNMENT"
+echo "Days remaining to submit: \$DAYS_REMAINING"
+echo "===================================="
+
+# Execute the reminder script
+./app/reminder.sh
+
 EOF
-
-# Make startup.sh executable
-chmod +x "$main_dir/startup.sh"
-
-# Create logs directory and initial log file
-mkdir -p "$main_dir/logs"
-touch "$main_dir/logs/reminder.log"
-
-echo "Environment setup complete!"
-echo "Directory structure created at: $main_dir"
-echo "To run the application, navigate to $main_dir and execute ./startup.sh"
-

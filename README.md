@@ -2,7 +2,6 @@ Submission Reminder Application
 
 This is a simple shell application that helps students keep track of assignment deadlines. It checks upcoming deadlines and prepares reminders for students with pending assignments.
 
-
 Directory Structure
 Copysubmission_reminder_app/
 ├── config/             
